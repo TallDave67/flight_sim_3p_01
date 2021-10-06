@@ -1,6 +1,7 @@
 #include "Utility.h"
 
 #include "Constants.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -53,7 +54,7 @@ void Utility::CalculateNormals(GLfloat* vertices, unsigned int num_vertices)
     }
 }
 
-void debugFragmentShader_ApplyLight()
+void Utility::debugFragmentShader_ApplyLight()
 {
     glm::vec3 fragPos(0.0f, 0.0f, 0.0f);
     glm::vec3 light(0.0f, 0.0f, -1.0f);
@@ -96,4 +97,32 @@ void debugFragmentShader_ApplyLight()
         fragToEye.x, fragToEye.y, fragToEye.z,
         reflection.x, reflection.y, reflection.z,
         specularFactor, specularColour.x, specularColour.y, specularColour.z, specularColour.a);
+}
+
+void Utility::axis_angle_to_euler(float x, float y, float z, float angle, float & heading, float & attitude, float & bank) 
+{
+	float s=sin(angle);
+	float c=cos(angle);
+	float t=1-c;
+	// if axis is not already normalised then uncomment this
+	// double magnitude = Math.sqrt(x*x + y*y + z*z);
+	// if (magnitude==0) throw error;
+	// x /= magnitude;
+	// y /= magnitude;
+	// z /= magnitude;
+	if ((x*y*t + z*s) > 0.998f) { // north pole singularity detected
+		heading = 2*atan2(x*sin(angle/2),cos(angle/2));
+		attitude = static_cast<float>(M_PI)/2.0f;
+		bank = 0;
+		return;
+	}
+	if ((x*y*t + z*s) < -0.998f) { // south pole singularity detected
+		heading = -2*atan2(x*sin(angle/2),cos(angle/2));
+		attitude = -static_cast<float>(M_PI)/2.0f;
+		bank = 0;
+		return;
+	}
+	heading = atan2(y * s- x * z * t , 1 - (y*y+ z*z ) * t);
+	attitude = asin(x * y * t + z * s) ;
+	bank = atan2(x * s - y * z * t , 1 - (x*x + z*z) * t);
 }

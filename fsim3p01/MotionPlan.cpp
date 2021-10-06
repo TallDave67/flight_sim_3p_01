@@ -91,15 +91,19 @@ void MotionPlan::execute()
     // Translation
     if ((*motion_segments)[current_segment].translate)
     {
-        motion.compute_incremental_translation(AXIS_X, (*motion_segments)[current_segment].direction_x);
-        motion.compute_incremental_translation(AXIS_Y, (*motion_segments)[current_segment].direction_y);
-        motion.compute_incremental_translation(AXIS_Z, (*motion_segments)[current_segment].direction_z);
+        motion.compute_incremental_translation(
+            (*motion_segments)[current_segment].direction_x, 
+            (*motion_segments)[current_segment].direction_y,
+            (*motion_segments)[current_segment].direction_z);
     }
 
     // Rotation
     if ((*motion_segments)[current_segment].rotate)
     {
-        motion.compute_incremental_rotation((*motion_segments)[current_segment].axes_of_rotation, (*motion_segments)[current_segment].direction_rotate);
+        motion.compute_incremental_rotation(
+            (*motion_segments)[current_segment].direction_rotate_x,
+            (*motion_segments)[current_segment].direction_rotate_y,
+            (*motion_segments)[current_segment].direction_rotate_z);
     }
 
     // Scaling

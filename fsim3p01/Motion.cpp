@@ -72,23 +72,11 @@ void Motion::set_translation(float x, float y, float z)
     position.z += z;
 }
 
-void Motion::compute_incremental_translation(int axes, int direction)
+void Motion::compute_incremental_translation(int direction_x, int direction_y, int direction_z)
 {
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
-    if (axes & AXIS_X)
-    {
-        x = compute_translation_distance(direction, speed_translate_x);
-    }
-    if (axes & AXIS_Y)
-    {
-        y = compute_translation_distance(direction, speed_translate_y);
-    }
-    if (axes & AXIS_Z)
-    {
-        z = compute_translation_distance(direction, speed_translate_z);
-    }
+    float x = compute_translation_distance(direction_x, speed_translate_x);
+    float y = compute_translation_distance(direction_y, speed_translate_y);
+    float z = compute_translation_distance(direction_z, speed_translate_z);
     set_translation(x, y, z);
 }
 
@@ -98,64 +86,18 @@ void Motion::apply_translation(glm::mat4& model)
 }
 
 // Rotation
-void Motion::set_rotation(int axes, float angle)
+void Motion::set_rotation(float angle_x, float angle_y, float angle_z)
 {
-    glm::tmat4x4<float> next_rotation_matrix;
-    if (axes & AXIS_X && axes == AXIS_Y && axes == AXIS_Z)
-    {
-        next_rotation_matrix = glm::eulerAngleXYZ(glm::radians(angle), glm::radians(angle), glm::radians(angle));
-    }
-    else if (axes & AXIS_X && axes == AXIS_Y)
-    {
-        next_rotation_matrix = glm::eulerAngleXY(glm::radians(angle), glm::radians(angle));
-    }
-    else if (axes & AXIS_X && axes == AXIS_Z)
-    {
-        next_rotation_matrix = glm::eulerAngleXZ(glm::radians(angle), glm::radians(angle));
-    }
-    else if (axes & AXIS_Y && axes == AXIS_Z)
-    {
-        next_rotation_matrix = glm::eulerAngleYZ(glm::radians(angle), glm::radians(angle));
-    }
-    else if (axes & AXIS_X)
-    {
-        next_rotation_matrix = glm::eulerAngleX(glm::radians(angle));
-    }
-    else if (axes & AXIS_Y)
-    {
-        next_rotation_matrix = glm::eulerAngleY(glm::radians(angle));
-    }
-    else if (axes & AXIS_Z)
-    {
-        next_rotation_matrix = glm::eulerAngleZ(glm::radians(angle));
-    }
+    glm::tmat4x4<float> next_rotation_matrix = glm::eulerAngleYZX(glm::radians(angle_y), glm::radians(angle_z), glm::radians(angle_x));
     rotation_matrix = next_rotation_matrix * rotation_matrix;
 }
 
-void Motion::compute_incremental_rotation(int axes, int direction)
+void Motion::compute_incremental_rotation(int direction_x, int direction_y, int direction_z)
 {
-    float angle = 0.0f;
-    int num_axes = 0;
-    if (axes & AXIS_X)
-    {
-        angle += compute_rotation_angle(direction, speed_translate_x);
-        num_axes++;
-    }
-    if (axes & AXIS_Y)
-    {
-        angle += compute_rotation_angle(direction, speed_translate_y);
-        num_axes++;
-    }
-    if (axes & AXIS_Z)
-    {
-        angle += compute_rotation_angle(direction, speed_translate_z);
-        num_axes++;
-    }
-    if (num_axes)
-    {
-        // use average angle
-        set_rotation(axes, angle / static_cast<float>(num_axes));
-    }
+    float angle_x = compute_rotation_angle(direction_x, speed_translate_x);
+    float angle_y = compute_rotation_angle(direction_y, speed_translate_y);
+    float angle_z = compute_rotation_angle(direction_z, speed_translate_z);
+    set_rotation(angle_x, angle_y, angle_z);
 }
 
 void  Motion::apply_rotation(glm::mat4& model)
@@ -261,6 +203,6 @@ float Motion::compute_scaling_factor(int direction, float speed)
 void Motion::reset_motion()
 {
     position = glm::vec3(0.0f, 0.0f, 0.0f);
-    rotation_matrix = glm::eulerAngleXYZ(0.0f, 0.0f, 0.0f);
+    rotation_matrix = glm::eulerAngleYZX(0.0f, 0.0f, 0.0f);
     size = 0.0f;
 }

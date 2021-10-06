@@ -25,6 +25,7 @@
 #include "MotionPlan.h"
 #include "MotionSegment.h"
 #include "Camera.h"
+#include "Utility.h"
 
 #include "FrameRate.h"
 #include "VideoStreamer.h"
@@ -95,8 +96,7 @@ void CreateShaders()
 void reset_motion_flyer(Motion* _motion_flyer)
 {
     _motion_flyer->set_translation(25.0f, 1.0f, -20.0f);
-    _motion_flyer->set_rotation(AXIS_Y, 55.0f);
-    _motion_flyer->set_rotation(AXIS_Z, -10.0f);
+    _motion_flyer->set_rotation(0.0f, 55.0f, -10.0f);
     _motion_flyer->set_scaling(0.2f);
 }
 
@@ -104,52 +104,52 @@ void reset_motion_flyer(Motion* _motion_flyer)
 std::vector<MotionSegment> flyerMotionSegments {
     {   14 * FPS_WINDOW, 0, 
         true, DIRECTION_NEGATIVE, DIRECTION_NONE, DIRECTION_POSITIVE,
-        false, AXIS_NONE, DIRECTION_NONE, 
+        false, DIRECTION_NONE, DIRECTION_NONE, DIRECTION_NONE, 
         false, DIRECTION_NONE
     },
     {   2 * FPS_WINDOW, 0, 
         true, DIRECTION_NEGATIVE, DIRECTION_NONE, DIRECTION_NONE,
-        true, AXIS_Y, DIRECTION_NEGATIVE, 
+        true, DIRECTION_NONE, DIRECTION_NEGATIVE, DIRECTION_NONE,
         false, DIRECTION_NONE
     },
     {   3 * FPS_WINDOW, 0, 
         true, DIRECTION_NEGATIVE, DIRECTION_NONE, DIRECTION_NEGATIVE,
-        false, AXIS_NONE, DIRECTION_NONE, 
+        false, DIRECTION_NONE, DIRECTION_NONE, DIRECTION_NONE, 
         false, DIRECTION_NONE
     },
     {   1 * FPS_WINDOW, 0, 
         true, DIRECTION_NONE, DIRECTION_NONE, DIRECTION_NEGATIVE,
-        true, AXIS_Y, DIRECTION_NEGATIVE, 
+        true, DIRECTION_NONE, DIRECTION_NEGATIVE, DIRECTION_NONE,
         false, DIRECTION_NONE
     },
     {   8 * FPS_WINDOW, 0, 
         true, DIRECTION_POSITIVE, DIRECTION_NONE, DIRECTION_NEGATIVE,
-        false, AXIS_NONE, DIRECTION_NONE, 
+        false, DIRECTION_NONE, DIRECTION_NONE, DIRECTION_NONE, 
         false, DIRECTION_NONE
     },
     {   1 * FPS_WINDOW, 0, 
         true, DIRECTION_POSITIVE, DIRECTION_NONE, DIRECTION_POSITIVE,
-        true, AXIS_Y, DIRECTION_NEGATIVE, 
+        true, DIRECTION_NONE, DIRECTION_NEGATIVE, DIRECTION_NONE,
         false, DIRECTION_NONE
     },
     {   2 * FPS_WINDOW, 0, 
         true, DIRECTION_POSITIVE, DIRECTION_NONE, DIRECTION_POSITIVE,
-        false, AXIS_NONE, DIRECTION_NONE, 
+        false, DIRECTION_NONE, DIRECTION_NONE, DIRECTION_NONE, 
         false, DIRECTION_NONE
     },
     {   1 * FPS_WINDOW, 0, 
         true, DIRECTION_POSITIVE, DIRECTION_POSITIVE, DIRECTION_POSITIVE,
-        true, AXIS_Z, DIRECTION_POSITIVE, 
+        true, DIRECTION_NONE, DIRECTION_NONE, DIRECTION_POSITIVE,
         false, DIRECTION_NONE
     },
     {   1 * FPS_WINDOW, 0, 
         true, DIRECTION_POSITIVE, DIRECTION_POSITIVE, DIRECTION_POSITIVE,
-        true, AXIS_Y, DIRECTION_NEGATIVE, 
+        true, DIRECTION_NONE, DIRECTION_NEGATIVE, DIRECTION_NONE,
         false, DIRECTION_NONE
     },
     {   12 * FPS_WINDOW, 0, 
         true, DIRECTION_POSITIVE, DIRECTION_POSITIVE, DIRECTION_POSITIVE,
-        false, AXIS_NONE, DIRECTION_NONE, 
+        false, DIRECTION_NONE, DIRECTION_NONE, DIRECTION_NONE, 
         false, DIRECTION_NONE
     },
 };
@@ -157,8 +157,18 @@ std::vector<MotionSegment> flyerMotionSegments {
 // Camera
 Camera camera;
 
+// Misc functions
+Utility utility;
+
 int main()
 {
+    // Figure out some stuff
+    float heading{ 0.0f };
+    float attitude{ 0.0f };
+    float bank{ 0.0f };
+    utility.axis_angle_to_euler(-1.414213562f/2.0f, 1.414213562f/2.0f, 0.0f, glm::radians(1.0f), heading, attitude, bank);
+    printf("heading = %2.4f, attitude = %2.4f, bank = %2.4f\n", heading, attitude, bank);
+
     // Our main drawing window
     DrawingWindow mainWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
     int ret = mainWindow.initialize();
@@ -249,6 +259,7 @@ int main()
     Motion floaterMotion;
     floaterMotion.initialize(1.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.5f, 1.0f);
     floaterMotion.set_translation(-2.3f, 1.0f, -4.7f);
+    floaterMotion.set_rotation(0.0f, 0.0f, 45.0f);
     floaterMotion.set_scaling(0.75f);
     //
     Motion spotlightMotion;
@@ -269,8 +280,8 @@ int main()
 
         // Motion
         flyerMotionPlan.move();
-        floaterMotion.compute_incremental_rotation(AXIS_Y, DIRECTION_NEGATIVE);
-        spotlightMotion.compute_incremental_rotation(AXIS_Y, DIRECTION_POSITIVE);
+        floaterMotion.compute_incremental_rotation(DIRECTION_NEGATIVE, DIRECTION_POSITIVE, DIRECTION_NONE);
+        spotlightMotion.compute_incremental_rotation(DIRECTION_NONE, DIRECTION_POSITIVE, DIRECTION_NONE);
 
         // Clear window
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
