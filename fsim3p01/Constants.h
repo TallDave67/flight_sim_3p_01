@@ -32,9 +32,10 @@ static const char* MODEL_EXTENSION = ".obj";
 static const char* TEXTURE_DEFAULT = "plain.png";
 
 // Motion
-static const int AXIS_X = 0;
-static const int AXIS_Y = 1;
-static const int AXIS_Z = 2;
+static const int AXIS_NONE = 0x00000000;
+static const int AXIS_X = 0x00000001;
+static const int AXIS_Y = 0x00000002;
+static const int AXIS_Z = 0x00000004;
 static const int DIRECTION_NEGATIVE = -1;
 static const int DIRECTION_NONE = 0;
 static const int DIRECTION_POSITIVE = 1;

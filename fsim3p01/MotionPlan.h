@@ -13,10 +13,10 @@ public:
     ~MotionPlan();
 
     void initialize(
-        glm::vec3 _position_start, glm::vec3 _axis_of_rotation_start, float _angle_start, float _size_start, 
-        float _speed_translate_x_start, float _speed_translate_y_start, float _speed_translate_z_start,
-        float _speed_rotate_start, float _speed_scale_start,
-        std::vector<MotionSegment> *_motion_segments, bool _repeat);
+        std::vector<MotionSegment> *_motion_segments, bool _repeat,
+        float _speed_translate_x, float _speed_translate_y, float _speed_translate_z,
+        float _speed_rotate_x, float _speed_rotate_y, float _speed_rotate_z, float _speed_scale
+    );
 
     void move();
 
@@ -25,20 +25,11 @@ public:
     void execute();
 
     Motion* get_motion();
+    void set_callback(void (*_reset_motion)(Motion*));
 
 private:
     Motion motion;
-    glm::vec3 position_start;
-    glm::vec3 axis_of_rotation_start;
-    float angle_start;
-    float size_start;
-    //
-    float speed_translate_x_start;
-    float speed_translate_y_start;
-    float speed_translate_z_start;
-    float speed_rotate_start;
-    float speed_scale_start;
-
+    void (*reset_motion)(Motion*);
     std::vector<MotionSegment> *motion_segments;
     int current_segment;
     bool repeat;

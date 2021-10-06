@@ -92,33 +92,66 @@ void CreateShaders()
     shaderList[0]->CreateFromFile(vertex_code_path.c_str() , fragment_code_path.c_str());
 }
 
+void reset_motion_flyer(Motion* _motion_flyer)
+{
+    _motion_flyer->set_translation(25.0f, 1.0f, -20.0f);
+    _motion_flyer->set_rotation(AXIS_Y, 55.0f);
+    _motion_flyer->set_rotation(AXIS_Z, -10.0f);
+    _motion_flyer->set_scaling(0.2f);
+}
+
 // Motion
 std::vector<MotionSegment> flyerMotionSegments {
-    {   11 * FPS_WINDOW, 0, 
+    {   14 * FPS_WINDOW, 0, 
         true, DIRECTION_NEGATIVE, DIRECTION_NONE, DIRECTION_POSITIVE,
-        false, {0.0f, 0.0f, 0.0f}, DIRECTION_NONE, 
+        false, AXIS_NONE, DIRECTION_NONE, 
         false, DIRECTION_NONE
     },
-    {   5 * FPS_WINDOW, 0, 
+    {   2 * FPS_WINDOW, 0, 
         true, DIRECTION_NEGATIVE, DIRECTION_NONE, DIRECTION_NONE,
-        true, {0.0f, 1.0f, 0.0f}, DIRECTION_NEGATIVE, 
+        true, AXIS_Y, DIRECTION_NEGATIVE, 
         false, DIRECTION_NONE
     },
-    {   11 * FPS_WINDOW, 0, 
+    {   3 * FPS_WINDOW, 0, 
+        true, DIRECTION_NEGATIVE, DIRECTION_NONE, DIRECTION_NEGATIVE,
+        false, AXIS_NONE, DIRECTION_NONE, 
+        false, DIRECTION_NONE
+    },
+    {   1 * FPS_WINDOW, 0, 
         true, DIRECTION_NONE, DIRECTION_NONE, DIRECTION_NEGATIVE,
-        false, {0.0f, 0.0f, 0.0f}, DIRECTION_NONE, 
-        false, DIRECTION_NONE
-    },
-    {   5 * FPS_WINDOW, 0, 
-        true, DIRECTION_POSITIVE, DIRECTION_NONE, DIRECTION_NONE,
-        true, {0.0f, 1.0f, 0.0f}, DIRECTION_NEGATIVE, 
+        true, AXIS_Y, DIRECTION_NEGATIVE, 
         false, DIRECTION_NONE
     },
     {   8 * FPS_WINDOW, 0, 
-        true, DIRECTION_POSITIVE, DIRECTION_POSITIVE, DIRECTION_POSITIVE,
-        false, {0.0f, 0.0f, 0.0f}, DIRECTION_NONE, 
+        true, DIRECTION_POSITIVE, DIRECTION_NONE, DIRECTION_NEGATIVE,
+        false, AXIS_NONE, DIRECTION_NONE, 
         false, DIRECTION_NONE
-    }
+    },
+    {   1 * FPS_WINDOW, 0, 
+        true, DIRECTION_POSITIVE, DIRECTION_NONE, DIRECTION_POSITIVE,
+        true, AXIS_Y, DIRECTION_NEGATIVE, 
+        false, DIRECTION_NONE
+    },
+    {   2 * FPS_WINDOW, 0, 
+        true, DIRECTION_POSITIVE, DIRECTION_NONE, DIRECTION_POSITIVE,
+        false, AXIS_NONE, DIRECTION_NONE, 
+        false, DIRECTION_NONE
+    },
+    {   1 * FPS_WINDOW, 0, 
+        true, DIRECTION_POSITIVE, DIRECTION_POSITIVE, DIRECTION_POSITIVE,
+        true, AXIS_Z, DIRECTION_POSITIVE, 
+        false, DIRECTION_NONE
+    },
+    {   1 * FPS_WINDOW, 0, 
+        true, DIRECTION_POSITIVE, DIRECTION_POSITIVE, DIRECTION_POSITIVE,
+        true, AXIS_Y, DIRECTION_NEGATIVE, 
+        false, DIRECTION_NONE
+    },
+    {   12 * FPS_WINDOW, 0, 
+        true, DIRECTION_POSITIVE, DIRECTION_POSITIVE, DIRECTION_POSITIVE,
+        false, AXIS_NONE, DIRECTION_NONE, 
+        false, DIRECTION_NONE
+    },
 };
 
 // Camera
@@ -207,19 +240,19 @@ int main()
     // Motion
     MotionPlan flyerMotionPlan;
     flyerMotionPlan.initialize(
-        glm::vec3(29.5f, 0.0f, -17.5f), glm::vec3(0.0f, 1.0f, 0.0f), -30.0f, 1.0f,
-        2.5f, 2.5f, 2.5f, 1.0f, 1.0f, &flyerMotionSegments, true);
+        &flyerMotionSegments, true,
+        2.0f, 2.0f, 2.0f, 0.5f, 0.5f, 0.5f, 1.0f);
+    flyerMotionPlan.set_callback(&reset_motion_flyer);
     Motion* flyerMotion = flyerMotionPlan.get_motion();
+    reset_motion_flyer(flyerMotion);
     //
     Motion floaterMotion;
-    floaterMotion.initialize(
-        glm::vec3(-2.3f, 1.0f, -4.7f), glm::vec3(0.0f, 1.0f, 1.0f), 0.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 0.5f, 1.0f);
+    floaterMotion.initialize(1.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.5f, 1.0f);
+    floaterMotion.set_translation(-2.3f, 1.0f, -4.7f);
+    floaterMotion.set_scaling(0.75f);
     //
     Motion spotlightMotion;
-    spotlightMotion.initialize(
-        glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 2.0f, 1.0f);
+    spotlightMotion.initialize(1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f, 1.0f);
 
     // Loop until window closed
     while (!mainWindow.shouldClose())
@@ -236,8 +269,8 @@ int main()
 
         // Motion
         flyerMotionPlan.move();
-        floaterMotion.rotate(glm::vec3(0.0f, 1.0f, 1.0f), DIRECTION_POSITIVE);
-        spotlightMotion.rotate(glm::vec3(0.0f, 1.0f, 0.0f), DIRECTION_POSITIVE);
+        floaterMotion.compute_incremental_rotation(AXIS_Y, DIRECTION_NEGATIVE);
+        spotlightMotion.compute_incremental_rotation(AXIS_Y, DIRECTION_POSITIVE);
 
         // Clear window
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -249,8 +282,8 @@ int main()
         shaderList[0]->SetDirectionalLight(&directionalLight);
         shaderList[0]->SetPointLights(pointLights, pointLightCount);
         //
-        spotLights[0].setDirection(spotlightMotion.getDirection(glm::vec3(0.0f, 0.0f, 0.0001f)));
-        spotLights[1].setDirection(-spotlightMotion.getDirection(glm::vec3(0.0f, 0.0f, 0.0001f)));
+        spotLights[0].setDirection(spotlightMotion.get_direction(glm::vec3(0.0f, 0.0f, 0.0001f)));
+        spotLights[1].setDirection(-spotlightMotion.get_direction(glm::vec3(0.0f, 0.0f, 0.0001f)));
         shaderList[0]->SetSpotLights(spotLights, spotLightCount);
 
         // Projection
@@ -264,20 +297,18 @@ int main()
         
         // Flyer Model
         glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(flyerMotion->getX(), flyerMotion->getY(), flyerMotion->getZ()));
-        model = glm::rotate(model, glm::radians(80.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(-10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::rotate(model, glm::radians(flyerMotion->getAngle()), flyerMotion->getAxisOfRotation());
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+        flyerMotion->apply_translation(model);
+        flyerMotion->apply_rotation(model);
+        flyerMotion->apply_scaling(model);
         glUniformMatrix4fv(shaderList[0]->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
         shinyMaterial.UseMaterial(shaderList[0]->GetSpecularIntensityLocation(), shaderList[0]->GetShininessLocation());
         flyer.RenderModel();
 
         // Floater Model
         model = glm::mat4 (1.0f);
-        model = glm::translate(model, glm::vec3(-2.3f, 1.0f, -4.7f));
-        model = glm::rotate(model, glm::radians(floaterMotion.getAngle()), floaterMotion.getAxisOfRotation());
-        model = glm::scale(model, glm::vec3(0.75f, 0.75f, 0.75f));
+        floaterMotion.apply_translation(model);
+        floaterMotion.apply_rotation(model);
+        floaterMotion.apply_scaling(model);
         glUniformMatrix4fv(shaderList[0]->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
         shinyMaterial.UseMaterial(shaderList[0]->GetSpecularIntensityLocation(), shaderList[0]->GetShininessLocation());
         floater.RenderModel();

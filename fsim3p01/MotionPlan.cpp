@@ -3,10 +3,7 @@
 #include "Constants.h"
 
 MotionPlan::MotionPlan() :
-    position_start(0.0f, 0.0f, 0.0f), angle_start(0.0f), axis_of_rotation_start(0.0f, 0.0f, 0.0f), size_start(0.0f),
-    speed_translate_x_start(0.0f), speed_translate_y_start(0.0f), speed_translate_z_start(0.0f),
-    speed_rotate_start(0.0f), speed_scale_start(0.0f),
-    motion_segments(nullptr), current_segment(0), repeat(false)
+    motion_segments(nullptr), current_segment(0), repeat(false), reset_motion(nullptr)
 {
 }
 
@@ -15,27 +12,18 @@ MotionPlan::~MotionPlan()
 }
 
 void MotionPlan::initialize(
-    glm::vec3 _position_start, glm::vec3 _axis_of_rotation_start, float _angle_start, float _size_start, 
-    float _speed_translate_x_start, float _speed_translate_y_start, float _speed_translate_z_start, 
-    float _speed_rotate_start, float _speed_scale_start,
-    std::vector<MotionSegment> *_motion_segments, bool _repeat)
+        std::vector<MotionSegment> *_motion_segments, bool _repeat,
+        float _speed_translate_x, float _speed_translate_y, float _speed_translate_z,
+        float _speed_rotate_x, float _speed_rotate_y, float _speed_rotate_z, float _speed_scale
+)
 {
-    position_start = _position_start;
-    axis_of_rotation_start = _axis_of_rotation_start;
-    angle_start = _angle_start;
-    size_start = _size_start;
-    speed_translate_x_start = _speed_translate_x_start;
-    speed_translate_y_start = _speed_translate_y_start;
-    speed_translate_z_start = _speed_translate_z_start;
-    speed_rotate_start = _speed_rotate_start;
-    speed_scale_start = _speed_scale_start;
     motion_segments = _motion_segments;
     repeat =_repeat;
 
     motion.initialize(
-        position_start, axis_of_rotation_start, angle_start, size_start,
-        speed_translate_x_start, speed_translate_y_start, speed_translate_z_start, 
-        speed_rotate_start, speed_scale_start);
+        _speed_translate_x, _speed_translate_y, _speed_translate_z, 
+        _speed_rotate_x, _speed_rotate_y, _speed_rotate_z, _speed_scale
+    );
 }
     
 void MotionPlan::move()
@@ -55,10 +43,11 @@ void MotionPlan::move()
 
 bool MotionPlan::reset()
 {
-    motion.initialize(
-        position_start, axis_of_rotation_start, angle_start, size_start, 
-        speed_translate_x_start, speed_translate_y_start, speed_translate_z_start, 
-        speed_rotate_start, speed_scale_start);
+    motion.reset_motion();
+    if (reset_motion)
+    {
+        reset_motion(&motion);
+    }
 
     current_segment = 0;
     unsigned int num_frames = 0;
@@ -102,25 +91,30 @@ void MotionPlan::execute()
     // Translation
     if ((*motion_segments)[current_segment].translate)
     {
-        motion.translate(AXIS_X, (*motion_segments)[current_segment].direction_x);
-        motion.translate(AXIS_Y, (*motion_segments)[current_segment].direction_y);
-        motion.translate(AXIS_Z, (*motion_segments)[current_segment].direction_z);
+        motion.compute_incremental_translation(AXIS_X, (*motion_segments)[current_segment].direction_x);
+        motion.compute_incremental_translation(AXIS_Y, (*motion_segments)[current_segment].direction_y);
+        motion.compute_incremental_translation(AXIS_Z, (*motion_segments)[current_segment].direction_z);
     }
 
     // Rotation
     if ((*motion_segments)[current_segment].rotate)
     {
-        motion.rotate((*motion_segments)[current_segment].axis_of_rotation, (*motion_segments)[current_segment].direction_rotate);
+        motion.compute_incremental_rotation((*motion_segments)[current_segment].axes_of_rotation, (*motion_segments)[current_segment].direction_rotate);
     }
 
     // Scaling
     if ((*motion_segments)[current_segment].scale)
     {
-        motion.scale((*motion_segments)[current_segment].direction_scale);
+        motion.compute_incremental_scaling((*motion_segments)[current_segment].direction_scale);
     }
 }
 
 Motion* MotionPlan::get_motion()
 {
     return &motion;
+}
+
+void MotionPlan::set_callback(void (*_reset_motion)(Motion*))
+{
+    reset_motion = _reset_motion;
 }
